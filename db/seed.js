@@ -9,7 +9,10 @@ const {
   createPost,
   updatePost,
   getAllPosts,
-  getPostsByUser 
+  getPostsByUser,
+  addTagsToPost,
+  createTags,
+  getPostsByTagName
 } = require('./index');
 
 
@@ -17,6 +20,8 @@ async function dropTables() {
     try {
         console.log("Starting to drop tables...")
         await client.query(`
+        DROP TABLE IF EXISTS post_tags;
+        DROP TABLE IF EXISTS tags;
         DROP TABLE IF EXISTS posts;
         DROP TABLE IF EXISTS users;
       `);
@@ -59,17 +64,27 @@ async function createTables() {
         );
 
         CREATE TABLE posts (
-        id SERIAL PRIMARY KEY,
-        "authorId" INTEGER REFERENCES users(id),
-        title varchar(255) NOT NULL,
-        content TEXT NOT NULL,
-        active BOOLEAN DEFAULT true
+            id SERIAL PRIMARY KEY,
+            "authorId" INTEGER REFERENCES users(id),
+            title varchar(255) NOT NULL,
+            content TEXT NOT NULL,
+            active BOOLEAN DEFAULT true
+        );
+
+        CREATE TABLE tags (
+          id SERIAL PRIMARY KEY,
+          name varchar(255) UNIQUE NOT NULL
+        );
+        CREATE TABLE post_tags (
+          "postId" INTEGER REFERENCES posts(id),
+          "tagId" INTEGER REFERENCES tags(id),
+          UNIQUE ("postId", "tagId")
         );
     `);
     console.log("Finished building tables!")
     } catch (error) {
         console,log("error building tables!")
-        throw error; // we pass the error up to the function that calls createTables
+        throw error; 
     }
 }
 
@@ -83,6 +98,7 @@ async function rebuildDB() {
       await createTables();
       await createInitialUsers();
       await createInitialPosts();
+
     } catch (error) {
       throw error;
     }
@@ -113,6 +129,16 @@ async function rebuildDB() {
         content: "Updated Content"
       });
       console.log("Result:", updatePostResult);
+
+      console.log("Calling updatePost on posts[1], only updating tags");
+      const updatePostTagsResult = await updatePost(posts[1].id, {
+        tags: ["#youcandoanything", "#redfish", "#bluefish"]
+      });
+      console.log("Result:", updatePostTagsResult);
+
+      console.log("Calling getPostsByTagName with #happy");
+      const postsWithHappy = await getPostsByTagName("#happy");
+      console.log("Result:", postsWithHappy);
   
       console.log("Calling getUserById with 1");
       const albert = await getUserById(1);
@@ -133,22 +159,50 @@ async function createInitialPosts() {
     await createPost ({
       authorId: albert.id,
       title: "First Post",
-      content: "This is my first post. I hope I love writing blogs as much as I love writing them."
+      content: "This is my first post. I hope I love writing blogs as much as I love writing them.",
+      tags: ["#happy", "#excited"]
     });
     await createPost ({
       authorId: sandra.id,
       title: "Sandra's first post",
-      content: "This is my first post. I am too sandy 4 u."
+      content: "This is my first post. I am too sandy 4 u.",
+      tags: ["#happy", "#verysandy"]
     });
     await createPost ({
       authorId: glamgal.id,
       title: "my glamor post",
-      content: "This is my first post. I like to write about all things glamorous."
+      content: "This is my first post. I like to write about all things glamorous.",
+      tags: ["#happy", "#glamgod"]
     });    
   } catch (error) {
     throw error;
   }
 }
+
+
+// async function createInitialTags() {
+//   try {
+//     console.log("Starting to create tags...");
+
+//     const [happy, sad, inspo, catman] = await createTags([
+//       '#happy', 
+//       '#worst-day-ever', 
+//       '#youcandoanything',
+//       '#catmandoeverything'
+//     ]);
+
+//     const [postOne, postTwo, postThree] = await getAllPosts();
+
+//     await addTagsToPost(postOne.id, [happy, inspo]);
+//     await addTagsToPost(postTwo.id, [sad, inspo]);
+//     await addTagsToPost(postThree.id, [happy, catman, inspo]);
+
+//     console.log("Finished creating tags!");
+//   } catch (error) {
+//     console.log("Error creating tags!");
+//     throw error;
+//   }
+// }
 
 
 
