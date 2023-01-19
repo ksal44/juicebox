@@ -29,7 +29,7 @@ async function dropTables() {
       console.log("Finished dropping tables!")
     } catch (error) {
         console.log("error dropping tables!")
-        throw error; // we pass the error up to the function that calls dropTables
+        throw error; 
     }
 }
 
