@@ -47,4 +47,12 @@ apiRouter.use(async (req, res, next) => {
   }
 });
 
-// Attach routers below here
+// all routers attached ABOVE here
+apiRouter.use((error, req, res, next) => {
+  res.send({
+    name: error.name,
+    message: error.message
+  });
+});
+
+module.exports = apiRouter;
