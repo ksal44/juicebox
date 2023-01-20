@@ -10,10 +10,7 @@ apiRouter.use('/users', usersRouter);
 apiRouter.use('/posts', postsRouter);
 apiRouter.use('/tags', tagsRouter);
 
-module.exports = apiRouter
 
-// api/index.js
-// Before we start attaching our routers
 
 const jwt = require('jsonwebtoken');
 const { getUserById } = require('../db');
@@ -24,7 +21,7 @@ apiRouter.use(async (req, res, next) => {
   const prefix = 'Bearer ';
   const auth = req.header('Authorization');
 
-  if (!auth) { // nothing to see here
+  if (!auth) { 
     next();
   } else if (auth.startsWith(prefix)) {
     const token = auth.slice(prefix.length);
@@ -47,7 +44,7 @@ apiRouter.use(async (req, res, next) => {
   }
 });
 
-// all routers attached ABOVE here
+
 apiRouter.use((error, req, res, next) => {
   res.send({
     name: error.name,
